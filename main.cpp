@@ -3,31 +3,66 @@
 #include <filesystem>
 #include <vector>
 #include "utils.h"
+#include "constants.h"
+//#include "ImageFile.h"
 
 using namespace std;
 
+// TODO: do not load an image every time you click arrows, keep them in ram
+// TODO: preload images (maybe not need this one)
+
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(1496, 1496), "Kalani Photo Viewer");
+    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 
-    string path = ".";
+    unsigned int defaultWindowWidth = desktop.width - 200;
+    unsigned int defaultWindowHeigth = desktop.height - 200;
+
+    sf::RenderWindow window(sf::VideoMode(defaultWindowWidth, defaultWindowHeigth), WINDOW_TITLE);
+
+    string path = "C:\\pics"; // TODO: use current directory
     vector<string> images = {};
+    //vector<ImageFile> imageFiles = {};
+
     for (const auto& entry : filesystem::directory_iterator(path)) {
         if (entry.is_regular_file() && is_image_file(entry.path())) {
-            cout << "file: " << entry.path() << " | ext: " << entry.path().extension() << endl;
+            cout << "file: " << entry.path() << endl;
             images.push_back(entry.path().string());
+
+            //ImageFile *file = new ImageFile();
+            //file->setFilename(entry.path().string());
+            //cout << file->getFilename();
+
+            //imageFiles.push_back(*file);
         }
     }
 
     int current_file = 0;
 
+    //sf::Image image;
+    //if (images.size() > 0 && !image.loadFromFile(images[current_file])) {
+    //    cout << "Error loading file to Image: " << images[current_file] << endl;
+    //}
+
     sf::Texture texture;
-    if (images.size() > 0 && !texture.loadFromFile(images[current_file])) {
+    if (!texture.loadFromFile(images[current_file])) {
         cout << "Error loading file: " << images[current_file] << endl;
     }
 
+    cout << "Image size: (" << texture.getSize().x << "," << texture.getSize().y << ")" << endl;
+
+    //sf::IntRect rect(0, 0, image.getSize().x, image.getSize().y);
+    //texture.loadFromImage(image, rect);
+
+    
+
+    //if (images.size() > 0 && !texture.loadFromFile(images[current_file])) {
+    //    cout << "Error loading file: " << images[current_file] << endl;
+    //}
+
     sf::Sprite sprite;
     sprite.setTexture(texture);
+    sprite.setPosition((window.getSize().x - texture.getSize().x) / 2, (window.getSize().y - texture.getSize().y) / 2);
 
     while (window.isOpen())
     {
@@ -48,6 +83,12 @@ int main()
                         if (!texture.loadFromFile(images[current_file])) {
                             cout << "Error loading file: " << images[current_file] << endl;
                         }
+                        else {
+                            cout << "Image size: (" << texture.getSize().x << "," << texture.getSize().y << ")" << endl;
+                            sf::IntRect newRect(0, 0, texture.getSize().x, texture.getSize().y);
+                            sprite.setTextureRect(newRect);
+                            sprite.setPosition((window.getSize().x - texture.getSize().x) / 2, (window.getSize().y - texture.getSize().y) / 2);
+                        }
                     }
                 }
                 else if (event.key.code == sf::Keyboard::Left) {
@@ -55,6 +96,12 @@ int main()
                         current_file--;
                         if (!texture.loadFromFile(images[current_file])) {
                             cout << "Error loading file: " << images[current_file] << endl;
+                        }
+                        else {
+                            cout << "Image size: (" << texture.getSize().x << "," << texture.getSize().y << ")" << endl;
+                            sf::IntRect newRect(0, 0, texture.getSize().x, texture.getSize().y);
+                            sprite.setTextureRect(newRect);
+                            sprite.setPosition((window.getSize().x - texture.getSize().x) / 2, (window.getSize().y - texture.getSize().y) / 2);
                         }
                     }
                 }

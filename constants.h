@@ -5,3 +5,5 @@
 using namespace std;
 
 inline const set<string> image_extensions = { ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".tif", ".webp" };
+
+const string WINDOW_TITLE = "Kalani Picture Viewer";
