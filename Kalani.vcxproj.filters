@@ -21,7 +21,7 @@
     <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ImageFile.cpp">
+    <ClCompile Include="Picture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,7 +32,7 @@
     <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ImageFile.h">
+    <ClInclude Include="Picture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

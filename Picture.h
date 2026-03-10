@@ -4,11 +4,12 @@
 
 using namespace std;
 
-class ImageFile
+class Picture
 {
 private:
 	string filename;
 	sf::Image image;
+	//sf::Vector2u windowSize;
 
 public:
     void setFilename(string);
@@ -16,4 +17,6 @@ public:
 
 	void setImage(sf::Image);
 	sf::Image getImage();
+
+	//void setWindowSize(sf::Vector2u);
 };

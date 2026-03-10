@@ -1,11 +1,13 @@
 #pragma once
 #include <string>
 #include <filesystem>
+#include <SFML/Graphics.hpp>
+#include "Picture.h"
 
-using namespace std;
+bool is_image_file(const std::filesystem::path& path);
 
-string to_lowercase(const string& str);
+std::string to_lowercase(std::string s);
 
-bool is_image_file(const filesystem::path& path);
+//sf::Sprite sprite_func(sf::Sprite);
 
-string to_lower(string s);
+sf::Sprite populateSpritesWithPic(sf::Vector2u);
