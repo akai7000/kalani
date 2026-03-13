@@ -1,7 +1,6 @@
-// src/PictureViewer.cpp
 #include "PictureViewer.h"
 #include <iostream>
-#include <algorithm>  // for std::min, std::max (if needed later)
+#include <algorithm>
 
 // Supported image extensions
 static const std::vector<std::string> imageExtensions = {
@@ -14,7 +13,7 @@ PictureViewer::PictureViewer(sf::RenderWindow& window)
     , m_view(window.getDefaultView())
 {
     // Optional: Start with a default folder or wait for user input
-    loadFolder("C:/Users/admin/Pictures");
+    //loadFolder("C:/Users/admin/Pictures");
 }
 
 void PictureViewer::loadFolder(const std::string& folderPath)
@@ -57,15 +56,14 @@ bool PictureViewer::loadCurrentImage()
 {
     if (m_images.empty() || m_currentIndex >= m_images.size()) {
         m_textureLoaded = false;
-        m_sprite.reset();  // clear the optional
+        m_sprite.reset();
         return false;
     }
 
     const auto& path = m_images[m_currentIndex];
     if (m_texture.loadFromFile(path.string())) {
-        m_sprite.emplace(m_texture);       // construct sprite in-place with texture
-        // or: m_sprite = sf::Sprite(m_texture);
-        m_sprite->setTexture(m_texture, true);  // reset rect if needed (optional now)
+        m_sprite.emplace(m_texture);
+        m_sprite->setTexture(m_texture, true);
 
         centerView();
         m_textureLoaded = true;
@@ -105,7 +103,6 @@ void PictureViewer::resetView()
 
 void PictureViewer::handleEvent(const sf::Event& event)
 {
-    // Window closed (most common way to exit)
     if (event.is<sf::Event::Closed>()) {
         m_window.close();
         return;
@@ -113,7 +110,7 @@ void PictureViewer::handleEvent(const sf::Event& event)
 
     // Key pressed
     if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
-        switch (key->scancode) {  // prefer scancode for layout-independent keys
+        switch (key->scancode) {
         case sf::Keyboard::Scancode::Right:
         case sf::Keyboard::Scancode::D:
             nextImage();
@@ -166,10 +163,7 @@ void PictureViewer::handleEvent(const sf::Event& event)
     // Handle window resize to update view size
     if (const auto* resized = event.getIf<sf::Event::Resized>()) {
         m_view.setSize(sf::Vector2f(resized->size));
-
-        // Optional: re-center or re-fit the content after resize
-        centerView();     // if you have this method
-        // or resetView();   // if you want to re-apply the fit/zoom logic
+        centerView();
     }
 }
 
@@ -184,8 +178,8 @@ void PictureViewer::render(sf::RenderWindow& target)
 
     target.clear(sf::Color(35, 35, 35));
 
-    if (m_textureLoaded && m_sprite.has_value()) {  // or just if (m_sprite)
-        target.draw(*m_sprite);                     // dereference the optional
+    if (m_textureLoaded && m_sprite.has_value()) {
+        target.draw(*m_sprite);
     }
     else {
         // placeholder / error message drawing (optional)

@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include "Picture.h"
 
-bool is_image_file(const std::filesystem::path& path);
+//bool is_image_file(const std::filesystem::path& path);
 
 std::string to_lowercase(std::string s);
 

@@ -10,9 +10,9 @@ std::string to_lowercase(std::string s) {
     return s;
 }
 
-bool is_image_file(const std::filesystem::path& path) {
-    return imageExtensions.find(to_lowercase(path.extension().string())) != imageExtensions.end();
-}
+//bool is_image_file(const std::filesystem::path& path) {
+//    return imageExtensions.find(to_lowercase(path.extension().string())) != imageExtensions.end();
+//}
 
 //sf::Sprite sprite_func(sf::Sprite sprite) {
 //
