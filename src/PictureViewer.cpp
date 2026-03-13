@@ -18,23 +18,26 @@ PictureViewer::PictureViewer(sf::RenderWindow& window)
 
 void PictureViewer::loadFolder(const std::string& folderPath)
 {
-    std::filesystem::path path(folderPath);
-    if (!std::filesystem::exists(path) || !std::filesystem::is_directory(path)) {
+    std::filesystem::path dir(folderPath);
+    if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
         std::cerr << "Invalid folder: " << folderPath << std::endl;
         return;
     }
 
     m_images.clear();
     m_currentIndex = 0;
-    loadImageList(path);
 
-    if (!m_images.empty()) {
-        loadCurrentImage();
+    for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        if (entry.is_regular_file()) {
+            std::string ext = entry.path().extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+            if (std::find(imageExtensions.begin(), imageExtensions.end(), ext) != imageExtensions.end()) {
+                m_images.push_back(entry.path());
+            }
+        }
     }
-    else {
-        std::cout << "No images found in folder.\n";
-        m_textureLoaded = false;
-    }
+
+    std::cout << "Found " << m_images.size() << " images in folder.\n";
 }
 
 void PictureViewer::loadImageList(const std::filesystem::path& folder)
@@ -76,6 +79,18 @@ bool PictureViewer::loadCurrentImage()
         m_textureLoaded = false;
         return false;
     }
+}
+
+std::vector<std::filesystem::path> PictureViewer::getImages() {
+    return m_images;
+}
+
+size_t PictureViewer::getCurrentIndex() {
+    return m_currentIndex;
+}
+
+void PictureViewer::setCurrentIndex(size_t currentIndex) {
+    m_currentIndex = currentIndex;
 }
 
 void PictureViewer::centerView()

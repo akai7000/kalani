@@ -2,34 +2,77 @@
 #include "PictureViewer.h"
 
 #include <iostream>
+#include <string_view>
 #include "constants.h"
 
 int main(int argc, char* argv[])
 {
-    sf::RenderWindow window(sf::VideoMode({ 1280, 720 }), windowTitle); // this is for now.  I will be able to resize the window.
+    sf::RenderWindow window(sf::VideoMode({ 1920, 1080 }), windowTitle); // this is for now.  I will be able to resize the window.
     window.setFramerateLimit(144); // change to 60 maybe
     //window.setKeyRepeatEnabled(false);   // I think it should be fine without this.  I actually would want the user to hold the key and have very fast browsing.
     PictureViewer viewer(window);
 
-    std::string path;
-    if (argc >= 2) {
-        path = argv[1];
+    std::vector<std::string_view> args(argv, argv + argc);
 
-        // Clean up quotes if Windows wraps path in ""
-        if (!path.empty() && path.front() == '"' && path.back() == '"') {
-            path = path.substr(1, path.size() - 2);
+    if (args.size() >= 2)
+    {
+        std::string_view pathSv = args[1];
+
+        // Remove quotes if present
+        if (pathSv.size() >= 2 && pathSv.front() == '"' && pathSv.back() == '"')
+        {
+            pathSv = pathSv.substr(1, pathSv.size() - 2);
         }
 
-        std::cout << "Opening file from command line: " << path << std::endl;
+        // Convert to filesystem::path for checks
+        std::filesystem::path path(pathSv);
 
-        // for now just loading the folder
-        viewer.loadFolder(std::filesystem::path(path).parent_path().string());
-        // but later I need to diaply the actual file that was opened, but then still load the folder
-        // ?? viewer.loadSingleImage(path);
+        if (std::filesystem::exists(path))
+        {
+            if (std::filesystem::is_directory(path))
+            {
+                // Argument is a folder --> load it, display first image
+                viewer.loadFolder(path.string());
+                std::cout << "Loaded folder: " << pathSv << " (showing first image)\n";
+            }
+            else if (std::filesystem::is_regular_file(path))
+            {
+                std::string parentDir = path.parent_path().string();
+                viewer.loadFolder(parentDir);  // now only fills list + index=0, no load
+
+                const auto& images = viewer.getImages();
+
+                auto it = std::find_if(images.begin(), images.end(),
+                    [&path](const auto& imgPath) {
+                        return imgPath.lexically_normal() == path.lexically_normal();
+                    });
+
+                if (it != images.end())
+                {
+                    viewer.setCurrentIndex(std::distance(images.begin(), it));
+                }
+                else
+                {
+                    viewer.setCurrentIndex(0);
+                }
+
+                viewer.loadCurrentImage();
+            }
+            else
+            {
+                std::cerr << "Invalid path (not file or folder): " << pathSv << "\n";
+            }
+        }
+        else
+        {
+            std::cerr << "Path does not exist: " << pathSv << "\n";
+        }
     }
-    else {
-        // No file given --> maybe load last used folder, or prompt, or show welcome screen
-        // viewer.loadFolder("C:/Pictures");  // or empty state
+    else
+    {
+        // No argument --> optional default behavior
+        std::cout << "No path provided. Starting empty.\n";
+        // viewer.loadFolder("C:/Default/Pictures");  // should I?
     }
 
     sf::Clock clock;

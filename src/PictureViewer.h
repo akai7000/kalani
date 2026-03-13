@@ -13,6 +13,10 @@ public:
     void update(float dt);
     void render(sf::RenderWindow& target);
     void loadFolder(const std::string& folderPath);
+    bool loadCurrentImage();
+    std::vector<std::filesystem::path> getImages();
+    size_t getCurrentIndex();
+    void setCurrentIndex(size_t currentIndex);
 
 private:
     sf::RenderWindow& m_window;
@@ -27,7 +31,6 @@ private:
     float m_zoom = 1.0f;
 
     void loadImageList(const std::filesystem::path& folder);
-    bool loadCurrentImage();
     void centerView();
     void resetView();
 
