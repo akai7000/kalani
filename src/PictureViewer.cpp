@@ -12,8 +12,15 @@ PictureViewer::PictureViewer(sf::RenderWindow& window)
     : m_window(window)
     , m_view(window.getDefaultView())
 {
-    // Optional: Start with a default folder or wait for user input
-    //loadFolder("C:/Users/admin/Pictures");
+    // Try to load a font (use a path that exists on your system or bundle one)
+    // Example: system font on Windows
+    if (!m_font.openFromFile("C:/Windows/Fonts/arial.ttf")) {
+        std::cerr << "Failed to load font for placeholder text\n";
+        // Optionally set a flag to skip text drawing later
+    }
+
+    // Or if you bundle arial.ttf next to the exe:
+    // if (!m_font.openFromFile("arial.ttf")) { ... }
 }
 
 void PictureViewer::loadFolder(const std::string& folderPath)
@@ -37,22 +44,9 @@ void PictureViewer::loadFolder(const std::string& folderPath)
         }
     }
 
+    //  Should I sort the m_images?
+
     std::cout << "Found " << m_images.size() << " images in folder.\n";
-}
-
-void PictureViewer::loadImageList(const std::filesystem::path& folder)
-{
-    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-        if (entry.is_regular_file()) {
-            std::string ext = entry.path().extension().string();
-            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-            if (std::find(imageExtensions.begin(), imageExtensions.end(), ext) != imageExtensions.end()) {
-                m_images.push_back(entry.path());
-            }
-        }
-    }
-
-    std::cout << "Found " << m_images.size() << " images.\n";
 }
 
 bool PictureViewer::loadCurrentImage()
@@ -63,25 +57,26 @@ bool PictureViewer::loadCurrentImage()
         return false;
     }
 
-    const auto& path = m_images[m_currentIndex];
-    if (m_texture.loadFromFile(path.string())) {
+    const auto& p = m_images[m_currentIndex];
+    if (m_texture.loadFromFile(p.string())) {
         m_sprite.emplace(m_texture);
-        m_sprite->setTexture(m_texture, true);
+        m_sprite->setTexture(m_texture, true);  // reset rect to full texture
 
-        centerView();
         m_textureLoaded = true;
-        std::cout << "Loaded: " << path.filename() << std::endl;
+
+        fitAndCenter();
+
         return true;
     }
     else {
-        std::cerr << "Failed to load: " << path << std::endl;
-        m_sprite.reset();
+        std::cerr << "Failed to load: " << p << std::endl;
         m_textureLoaded = false;
+        m_sprite.reset();
         return false;
     }
 }
 
-std::vector<std::filesystem::path> PictureViewer::getImages() {
+const std::vector<std::filesystem::path> PictureViewer::getImages() const {
     return m_images;
 }
 
@@ -91,21 +86,6 @@ size_t PictureViewer::getCurrentIndex() {
 
 void PictureViewer::setCurrentIndex(size_t currentIndex) {
     m_currentIndex = currentIndex;
-}
-
-void PictureViewer::centerView()
-{
-    if (!m_textureLoaded || !m_sprite.has_value()) return;
-
-    sf::Vector2u texSize = m_texture.getSize();
-    sf::Vector2f winSize = sf::Vector2f(m_window.getSize());
-
-    float scaleX = winSize.x / static_cast<float>(texSize.x);
-    float scaleY = winSize.y / static_cast<float>(texSize.y);
-    float scale = std::min(scaleX, scaleY);
-
-    m_zoom = scale;
-    resetView();
 }
 
 void PictureViewer::resetView()
@@ -136,13 +116,13 @@ void PictureViewer::handleEvent(const sf::Event& event)
             prevImage();
             break;
 
-        case sf::Keyboard::Scancode::Equal:     // + key (main keyboard)
-        case sf::Keyboard::Scancode::NumpadPlus:       // numpad +
+        case sf::Keyboard::Scancode::Equal:
+        case sf::Keyboard::Scancode::NumpadPlus:
             zoom(1.1f);
             break;
 
-        case sf::Keyboard::Scancode::Hyphen:  // - key (main keyboard)
-        case sf::Keyboard::Scancode::NumpadMinus:     // numpad -
+        case sf::Keyboard::Scancode::Hyphen:
+        case sf::Keyboard::Scancode::NumpadMinus:
             zoom(0.9f);
             break;
 
@@ -178,7 +158,7 @@ void PictureViewer::handleEvent(const sf::Event& event)
     // Handle window resize to update view size
     if (const auto* resized = event.getIf<sf::Event::Resized>()) {
         m_view.setSize(sf::Vector2f(resized->size));
-        centerView();
+        fitAndCenter();
     }
 }
 
@@ -189,18 +169,33 @@ void PictureViewer::update(float /*dt*/)
 
 void PictureViewer::render(sf::RenderWindow& target)
 {
-    target.setView(m_view);
-
     target.clear(sf::Color(35, 35, 35));
+
+    target.setView(m_view);
 
     if (m_textureLoaded && m_sprite.has_value()) {
         target.draw(*m_sprite);
     }
     else {
-        // placeholder / error message drawing (optional)
+        // Only draw text if font loaded successfully
+        if (!m_font.getInfo().family.empty()) {  // simple check: empty if load failed
+            sf::Text msg(m_font);  // required: pass font at construction
+
+            msg.setString("No images loaded. Open a folder or file.");
+            msg.setCharacterSize(24);
+            msg.setFillColor(sf::Color::White);
+            msg.setPosition({ 50.f, 50.f });
+
+            target.draw(msg);
+        }
+        // Optional: draw a simple background rect or icon if font fails
+        // e.g. sf::RectangleShape bg(sf::Vector2f(400.f, 100.f));
+        // bg.setFillColor(sf::Color(50, 50, 50));
+        // bg.setPosition(40.f, 40.f);
+        // target.draw(bg);
     }
 
-    target.setView(target.getDefaultView());
+    target.setView(target.getDefaultView());  // reset for any future HUD
 }
 
 void PictureViewer::nextImage()
@@ -245,4 +240,24 @@ void PictureViewer::toggleFullscreen()
     }
 
     resetView();
+}
+
+void PictureViewer::fitAndCenter()
+{
+    if (!m_textureLoaded || !m_sprite.has_value()) {
+        return;
+    }
+
+    sf::Vector2f imageSize = sf::Vector2f(m_texture.getSize());
+    sf::Vector2f windowSize = sf::Vector2f(m_window.getSize());
+
+    float scaleX = windowSize.x / imageSize.x;
+    float scaleY = windowSize.y / imageSize.y;
+    float fitScale = std::min(scaleX, scaleY);
+
+    m_view.setSize(windowSize);
+    m_view.setCenter(imageSize / 2.f);
+    m_view.setViewport(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(1.f, 1.f)));
+
+    m_view.zoom(1.f / fitScale);
 }

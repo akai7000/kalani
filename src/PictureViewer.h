@@ -14,7 +14,7 @@ public:
     void render(sf::RenderWindow& target);
     void loadFolder(const std::string& folderPath);
     bool loadCurrentImage();
-    std::vector<std::filesystem::path> getImages();
+    const std::vector<std::filesystem::path> getImages() const;
     size_t getCurrentIndex();
     void setCurrentIndex(size_t currentIndex);
 
@@ -27,15 +27,16 @@ private:
     std::vector<std::filesystem::path> m_images;
     size_t m_currentIndex = 0;
     bool m_textureLoaded = false;
-
     float m_zoom = 1.0f;
+    sf::Font m_font;
 
-    void loadImageList(const std::filesystem::path& folder);
-    void centerView();
+    //void loadImageList(const std::filesystem::path& folder);
+    //void centerView();
     void resetView();
 
     void nextImage();
     void prevImage();
     void zoom(float factor);
     void toggleFullscreen();
+    void fitAndCenter();
 };
