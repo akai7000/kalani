@@ -1,6 +1,8 @@
 #include "PictureViewer.h"
 #include <iostream>
 #include <algorithm>
+#include <windows.h>
+#include <shellapi.h>
 
 // Supported image extensions
 static const std::vector<std::string> imageExtensions = {
@@ -138,7 +140,8 @@ void PictureViewer::handleEvent(const sf::Event& event)
             m_window.close();
             break;
 
-        default:
+        case sf::Keyboard::Scancode::Delete:
+            deleteCurrentImage();
             break;
         }
         return;
@@ -260,4 +263,63 @@ void PictureViewer::fitAndCenter()
     m_view.setViewport(sf::FloatRect(sf::Vector2f(0.f, 0.f), sf::Vector2f(1.f, 1.f)));
 
     m_view.zoom(1.f / fitScale);
+}
+
+void PictureViewer::deleteCurrentImage()
+{
+    if (!m_textureLoaded || m_images.empty() || m_currentIndex >= m_images.size()) {
+        return;  // nothing to delete
+    }
+
+    const auto& currentPath = m_images[m_currentIndex];
+
+    // do I need to link user32.lib? seems to work without it.
+    int result = MessageBoxA(NULL,
+        ("Delete " + currentPath.filename().string() + "?").c_str(),
+        "Confirm Delete",
+        MB_YESNO | MB_ICONQUESTION | MB_TOPMOST);
+
+    if (result != IDYES) {
+        return;
+    }
+
+    // send image to recycle bin
+    SHFILEOPSTRUCTA fileOp = { 0 };
+    fileOp.wFunc = FO_DELETE;
+    std::string from = currentPath.string() + '\0';
+    fileOp.pFrom = from.c_str();
+    fileOp.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION;
+
+    result = SHFileOperationA(&fileOp);
+    if (result != 0) {
+        std::cerr << "SHFileOperation failed: " << result << "\n";
+    }
+
+    std::cout << "Send to recycle bin: " << currentPath.filename() << "\n";
+
+    //// Delete from disk permanently (no recycle bin)
+    //std::error_code ec;
+    //if (!std::filesystem::remove(currentPath, ec)) {
+    //    std::cerr << "Failed to delete file: " << ec.message() << "\n";
+    //    return;
+    //}
+    //std::cout << "Deleted: " << currentPath.filename() << "\n";
+
+    // Step 3: Remove from in-memory list
+    m_images.erase(m_images.begin() + m_currentIndex);
+
+    // Step 4: Adjust index and load next/previous image
+    if (m_images.empty()) {
+        // No more images
+        m_currentIndex = 0;
+        m_textureLoaded = false;
+        m_sprite.reset();
+    }
+    else {
+        // Stay on same index (now points to next image) or clamp
+        if (m_currentIndex >= m_images.size()) {
+            m_currentIndex = m_images.size() - 1;
+        }
+        loadCurrentImage();  // reloads the new current one + fitAndCenter
+    }
 }

@@ -3,10 +3,13 @@
 A fast, lightweight image viewer/organizer built with C++ and SFML.
 
 ## Features
-- Quick folder/image loading
-- Keyboard navigation (arrows for next/prev, etc.)
-- Zoom
-- Fullscreen mode
+- [x] Quick folder/image loading
+- [x] Keyboard navigation (arrows for next/prev, etc.)
+- [x] Zoom
+- [x] Fullscreen mode
+- [x] Delete current image by pressing Del
+- [ ] Rate images
+- [ ] Compare two images
 
 ## Build Instructions
 1. Open `Kalani.sln` in Visual Studio 2022

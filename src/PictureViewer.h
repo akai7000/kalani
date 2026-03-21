@@ -39,4 +39,5 @@ private:
     void zoom(float factor);
     void toggleFullscreen();
     void fitAndCenter();
+    void deleteCurrentImage();
 };
