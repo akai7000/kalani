@@ -162,6 +162,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitattributes" />
+    <None Include=".github\copilot-instructions.md" />
     <None Include=".gitignore" />
     <None Include="README.md" />
   </ItemGroup>
