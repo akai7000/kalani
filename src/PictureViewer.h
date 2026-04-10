@@ -17,7 +17,7 @@ public:
     const std::vector<std::filesystem::path> getImages() const;
     size_t getCurrentIndex();
     void setCurrentIndex(size_t currentIndex);
-
+    
 private:
     sf::RenderWindow& m_window;
     sf::View m_view;

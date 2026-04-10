@@ -2,7 +2,6 @@
 #include <string>
 #include <filesystem>
 #include <SFML/Graphics.hpp>
-#include "Picture.h"
 
 //bool is_image_file(const std::filesystem::path& path);
 
